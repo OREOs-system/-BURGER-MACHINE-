@@ -1,0 +1,2 @@
+# -BURGER-MACHINE-
+School purpose
