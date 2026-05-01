@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burger Machine</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="brand-bar">
+    <h1>Burger Machine</h1>
+  </div>
+
+  <div id="auth-container" class="box centered">
+    <div class="auth-switch">
+      <button id="show-login">Log In</button>
+      <button id="show-signup">Sign Up</button>
+    </div>
+
+    <div id="login-form" class="auth-form">
+      <h2>Log In</h2>
+      <div class="message" id="login-message"></div>
+      <label>Username<input type="text" id="login-username" required></label>
+      <label>Password<input type="password" id="login-password" required></label>
+      <button id="login-button">Log In</button>
+    </div>
+
+    <div id="signup-form" class="auth-form hidden">
+      <h2>Sign Up</h2>
+      <div class="message" id="signup-message"></div>
+      <label>Username<input type="text" id="signup-username"></label>
+      <label>First Name<input type="text" id="signup-firstname"></label>
+      <label>Last Name<input type="text" id="signup-lastname"></label>
+      <label>Email<input type="email" id="signup-email"></label>
+      <label>Password<input type="password" id="signup-password"></label>
+      <label>Confirm Password<input type="password" id="signup-confirm"></label>
+      <label>Contact Number<input type="text" id="signup-contact"></label>
+      <label>Address<input type="text" id="signup-address"></label>
+      <button id="signup-button">Create Account</button>
+    </div>
+  </div>
+
+  <div id="app-container" class="app hidden">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="user-info">Welcome, <span id="nav-username"></span></div>
+      </div>
+      <nav class="topnav">
+        <button data-page="menu">Menu</button>
+        <button data-page="history">Transaction History</button>
+        <button data-page="settings">Settings</button>
+        <button id="logout-button">Log Out</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="menu-page" class="page-page">
+        <h2>Menu</h2>
+        <div id="product-grid" class="product-grid"></div>
+        <div class="cart-panel">
+          <h3>Cart</h3>
+          <div id="cart-list"></div>
+          <div class="cart-footer">
+            <div>Total: ₱<span id="cart-total">0.00</span></div>
+            <button id="clear-cart">Clear Cart</button>
+            <button id="place-order">Place Order</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="history-page" class="page-page hidden">
+        <h2>Transaction History</h2>
+        <div id="history-list" class="history-list"></div>
+      </section>
+
+      <section id="settings-page" class="page-page hidden">
+        <h2>Account Settings</h2>
+        <div class="message" id="settings-message"></div>
+        <form id="settings-form" class="settings-form">
+          <label>Username<input type="text" id="settings-username" disabled></label>
+          <label>First Name<input type="text" id="settings-firstname"></label>
+          <label>Last Name<input type="text" id="settings-lastname"></label>
+          <label>Email<input type="email" id="settings-email"></label>
+          <label>Contact Number<input type="text" id="settings-contact"></label>
+          <label>Address<input type="text" id="settings-address"></label>
+          <label>New Password<input type="password" id="settings-password"></label>
+          <label>Confirm Password<input type="password" id="settings-confirm"></label>
+          <button type="submit">Save Changes</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
