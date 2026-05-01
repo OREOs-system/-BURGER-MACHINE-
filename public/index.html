@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Burger Machine Login</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-panel">
+      <h1>Burger Machine</h1>
+      <p>Sign in to start ordering.</p>
+      <form id="loginForm">
+        <label>Username</label>
+        <input type="text" id="loginUsername" required />
+        <label>Password</label>
+        <input type="password" id="loginPassword" required />
+        <button type="submit">Log In</button>
+      </form>
+      <div class="auth-actions">
+        <a href="/signup">Create an account</a>
+        <a href="/admin">Admin login</a>
+      </div>
+      <div class="message" id="loginMessage"></div>
+    </div>
+  </div>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

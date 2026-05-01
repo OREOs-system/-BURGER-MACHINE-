@@ -1,0 +1,14 @@
+{
+  "name": "burger-machine",
+  "version": "1.0.0",
+  "description": "Burger ordering system with Node.js, MySQL, HTML, CSS, and JavaScript.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.4",
+    "express-session": "^1.17.3",
+    "mysql2": "^3.5.3"
+  }
+}
