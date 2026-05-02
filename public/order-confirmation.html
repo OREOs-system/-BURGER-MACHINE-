@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmation | Burger Machine</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card confirmation-card">
+      <h1>Order Confirmed</h1>
+      <p id="confirmationMessage" class="success-message"></p>
+      <div class="confirmation-grid">
+        <div class="confirmation-info">
+          <p><strong>Order</strong> <span id="confirmationOrderId"></span></p>
+          <p><strong>Date &amp; time</strong> <span id="confirmationDate"></span></p>
+          <p><strong>Status</strong> <span id="confirmationStatus"></span></p>
+        </div>
+        <div class="confirmation-total">
+          <p><strong>Total</strong></p>
+          <p id="confirmationTotal"></p>
+        </div>
+      </div>
+      <div class="order-items">
+        <h2>Items</h2>
+        <ul id="confirmationItems"></ul>
+      </div>
+      <div class="confirmation-actions">
+        <button id="backToMenuBtn" class="primary-btn">Back to Menu</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

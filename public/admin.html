@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Burger Machine | Admin Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1>Admin Panel</h1>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="adminUsername" placeholder="admin" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="adminPassword" placeholder="admin001" autocomplete="current-password" required />
+      </div>
+      <button id="adminLoginBtn" class="primary-btn">Log In</button>
+      <p id="adminError" class="error-message"></p>
+      <p class="note"><a href="index.html">Back to customer login</a></p>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>
