@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
@@ -7,10 +8,32 @@ const mysql = require('mysql2/promise');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_USER = process.env.DB_USER || 'root';
-const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_HOST = process.env.DB_HOST;
+const DB_USER = process.env.DB_USER;
+const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_NAME = process.env.DB_NAME || 'burger_machine';
+const DB_SOCKET_PATH = process.env.DB_SOCKET_PATH || '/var/run/mysqld/mysqld.sock';
+const DB_CREDENTIAL_FILE = '/etc/mysql/debian.cnf';
+
+let defaultDbUser = DB_USER;
+let defaultDbPassword = DB_PASSWORD;
+if (!defaultDbUser || !defaultDbPassword) {
+  try {
+    const configText = fs.readFileSync(DB_CREDENTIAL_FILE, 'utf8');
+    const userMatch = configText.match(/user\s*=\s*(.+)/);
+    const passwordMatch = configText.match(/password\s*=\s*(.+)/);
+    if (userMatch) defaultDbUser = userMatch[1].trim();
+    if (passwordMatch) defaultDbPassword = passwordMatch[1].trim();
+  } catch (error) {
+    // ignore if we cannot read system credentials
+  }
+}
+
+const DB_CONNECTION_CONFIG = {
+  user: defaultDbUser || 'root',
+  password: defaultDbPassword || '',
+  ...(DB_HOST ? { host: DB_HOST } : { socketPath: DB_SOCKET_PATH })
+};
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -50,14 +73,12 @@ function isValidContact(contact) {
 }
 
 async function initDb() {
-  const rootConnection = await mysql.createConnection({ host: DB_HOST, user: DB_USER, password: DB_PASSWORD });
+  const rootConnection = await mysql.createConnection(DB_CONNECTION_CONFIG);
   await rootConnection.query('CREATE DATABASE IF NOT EXISTS `' + DB_NAME + '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
   await rootConnection.end();
 
   pool = mysql.createPool({
-    host: DB_HOST,
-    user: DB_USER,
-    password: DB_PASSWORD,
+    ...DB_CONNECTION_CONFIG,
     database: DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
@@ -101,7 +122,7 @@ async function initDb() {
     INSERT IGNORE INTO users (username, first_name, last_name, email, password, contact, address, role)
     VALUES ('admin', 'Admin', 'User', 'admin@example.com', ?, '0000000000', 'Admin Office', 'admin');
   `, [adminPasswordHash]);
-  await pool.query('UPDATE users SET password = ? WHERE username = ? AND password = ?', [adminPasswordHash, 'admin', 'admin001']);
+  await pool.query('UPDATE users SET password = ? WHERE username = ?', [adminPasswordHash, 'admin']);
 }
 
 function requireLogin(req, res, next) {
