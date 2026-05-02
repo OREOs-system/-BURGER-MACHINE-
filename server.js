@@ -21,7 +21,7 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 app.use('/images', express.static(path.join(__dirname, 'menu')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 let pool;
 
@@ -338,9 +338,9 @@ app.get('/api/logout', (req, res) => {
 
 app.get('*', (req, res) => {
   if (req.path === '/') {
-    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    return res.sendFile(path.join(__dirname, 'index.html'));
   }
-  res.sendFile(path.join(__dirname, 'public', req.path));
+  res.sendFile(path.join(__dirname, req.path));
 });
 
 initDb()
