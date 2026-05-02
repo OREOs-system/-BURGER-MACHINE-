@@ -31,6 +31,10 @@ function findCartTotal() {
   return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
+function safeFetchJson(response) {
+  return response.json().catch(() => ({ error: 'Invalid server response.' }));
+}
+
 function updateCartCount() {
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   const counter = document.getElementById('cartCount');
@@ -91,7 +95,10 @@ function addToCart(itemId) {
   }
   saveCart();
   updateCartCount();
-  alert(`${item.name} added to cart.`);
+  const cartMessage = document.getElementById('cartMessage');
+  if (cartMessage) {
+    cartMessage.textContent = `${item.name} added to cart.`;
+  }
 }
 
 function renderCart() {
@@ -161,29 +168,37 @@ async function placeOrder() {
   if (!confirm('Are you sure you want to place this order?')) {
     return;
   }
-  const response = await fetch('/api/order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: cart, total: findCartTotal() })
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    document.getElementById('cartMessage').textContent = result.error || 'Unable to place order.';
-    return;
+  const placeBtn = document.getElementById('placeOrderBtn');
+  if (placeBtn) placeBtn.disabled = true;
+  try {
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart, total: findCartTotal() })
+    });
+    const result = await safeFetchJson(response);
+    if (!response.ok) {
+      document.getElementById('cartMessage').textContent = result.error || 'Unable to place order.';
+      return;
+    }
+    const lastOrder = {
+      id: result.orderId || null,
+      items: cart,
+      total: findCartTotal(),
+      placedAt: new Date().toISOString(),
+      status: 'Pending'
+    };
+    localStorage.setItem('burger-machine-last-order', JSON.stringify(lastOrder));
+    cart = [];
+    saveCart();
+    renderCart();
+    updateCartCount();
+    window.location.href = '/order-confirmation.html';
+  } catch (error) {
+    document.getElementById('cartMessage').textContent = 'Network error, please try again.';
+  } finally {
+    if (placeBtn) placeBtn.disabled = false;
   }
-  const lastOrder = {
-    id: result.orderId || null,
-    items: cart,
-    total: findCartTotal(),
-    placedAt: new Date().toISOString(),
-    status: 'Pending'
-  };
-  localStorage.setItem('burger-machine-last-order', JSON.stringify(lastOrder));
-  cart = [];
-  saveCart();
-  renderCart();
-  updateCartCount();
-  window.location.href = '/order-confirmation.html';
 }
 
 function setActiveSection(section) {
@@ -198,54 +213,62 @@ function setActiveSection(section) {
 async function loadHistory() {
   const container = document.getElementById('historyList');
   if (!container) return;
-  const response = await fetch('/api/orders');
-  if (!response.ok) {
+  try {
+    const response = await fetch('/api/orders');
+    if (!response.ok) {
+      container.innerHTML = '<p>Unable to load transaction history.</p>';
+      return;
+    }
+    const data = await safeFetchJson(response);
+    if (!data.orders || data.orders.length === 0) {
+      container.innerHTML = '<p>No previous orders yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    data.orders.forEach(order => {
+      const card = document.createElement('div');
+      card.className = 'transaction-card';
+      card.innerHTML = `
+        <h3>Order #${order.id}</h3>
+        <div class="meta">
+          <span><strong>${order.username}</strong> · ${order.email}</span>
+          <span>${order.contact} · ${order.address}</span>
+          <span>${new Date(order.created_at).toLocaleString()}</span>
+        </div>
+        <div class="meta">
+          <strong>Status:</strong> <span class="badge ${order.status}">${order.status}</span>
+        </div>
+        <div>
+          <strong>Items:</strong>
+          <ul>${order.items.map(item => `<li>${item.quantity}× ${item.name} (${formatMoney(item.price)})</li>`).join('')}</ul>
+        </div>
+        <div class="meta"><strong>Total:</strong> ${formatMoney(order.total)}</div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (error) {
     container.innerHTML = '<p>Unable to load transaction history.</p>';
-    return;
   }
-  const data = await response.json();
-  if (!data.orders || data.orders.length === 0) {
-    container.innerHTML = '<p>No previous orders yet.</p>';
-    return;
-  }
-  container.innerHTML = '';
-  data.orders.forEach(order => {
-    const card = document.createElement('div');
-    card.className = 'transaction-card';
-    card.innerHTML = `
-      <h3>Order #${order.id}</h3>
-      <div class="meta">
-        <span><strong>${order.username}</strong> · ${order.email}</span>
-        <span>${order.contact} · ${order.address}</span>
-        <span>${new Date(order.created_at).toLocaleString()}</span>
-      </div>
-      <div class="meta">
-        <strong>Status:</strong> <span class="badge ${order.status}">${order.status}</span>
-      </div>
-      <div>
-        <strong>Items:</strong>
-        <ul>${order.items.map(item => `<li>${item.quantity}× ${item.name} (${formatMoney(item.price)})</li>`).join('')}</ul>
-      </div>
-      <div class="meta"><strong>Total:</strong> ${formatMoney(order.total)}</div>
-    `;
-    container.appendChild(card);
-  });
 }
 
 async function loadProfile() {
-  const response = await fetch('/api/user/profile');
-  if (!response.ok) {
+  try {
+    const response = await fetch('/api/user/profile');
+    if (!response.ok) {
+      window.location.href = '/index.html';
+      return;
+    }
+    const data = await safeFetchJson(response);
+    const profile = data.profile;
+    document.getElementById('profileUsername').value = profile.username;
+    document.getElementById('profileEmail').value = profile.email;
+    document.getElementById('profileFirstName').value = profile.first_name;
+    document.getElementById('profileLastName').value = profile.last_name;
+    document.getElementById('profileContact').value = profile.contact;
+    document.getElementById('profileAddress').value = profile.address;
+  } catch (error) {
     window.location.href = '/index.html';
-    return;
   }
-  const data = await response.json();
-  const profile = data.profile;
-  document.getElementById('profileUsername').value = profile.username;
-  document.getElementById('profileEmail').value = profile.email;
-  document.getElementById('profileFirstName').value = profile.first_name;
-  document.getElementById('profileLastName').value = profile.last_name;
-  document.getElementById('profileContact').value = profile.contact;
-  document.getElementById('profileAddress').value = profile.address;
 }
 
 async function saveProfile() {
@@ -273,7 +296,11 @@ async function saveProfile() {
 }
 
 async function logout() {
-  await fetch('/api/logout');
+  try {
+    await fetch('/api/logout');
+  } catch (error) {
+    console.warn('Logout network error:', error);
+  }
   localStorage.removeItem(cartKey);
   window.location.href = '/index.html';
 }
@@ -303,24 +330,34 @@ async function initAuthPage() {
   loginTab.addEventListener('click', showLogin);
   signupTab.addEventListener('click', showSignup);
 
-  document.getElementById('loginButton').addEventListener('click', async () => {
+  const loginButton = document.getElementById('loginButton');
+  const signupButton = document.getElementById('signupButton');
+
+  loginButton.addEventListener('click', async () => {
     authError.textContent = '';
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      authError.textContent = result.error || 'Unable to log in.';
-      return;
+    loginButton.disabled = true;
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const result = await safeFetchJson(response);
+      if (!response.ok) {
+        authError.textContent = result.error || 'Unable to log in.';
+        return;
+      }
+      window.location.href = '/main.html';
+    } catch (error) {
+      authError.textContent = 'Network error, please try again.';
+    } finally {
+      loginButton.disabled = false;
     }
-    window.location.href = '/main.html';
   });
 
-  document.getElementById('signupButton').addEventListener('click', async () => {
+  signupButton.addEventListener('click', async () => {
     authError.textContent = '';
     const payload = {
       username: document.getElementById('signupUsername').value.trim(),
@@ -332,17 +369,24 @@ async function initAuthPage() {
       contact: document.getElementById('signupContact').value.trim(),
       address: document.getElementById('signupAddress').value.trim()
     };
-    const response = await fetch('/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      authError.textContent = result.error || 'Could not sign up.';
-      return;
+    signupButton.disabled = true;
+    try {
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await safeFetchJson(response);
+      if (!response.ok) {
+        authError.textContent = result.error || 'Could not sign up.';
+        return;
+      }
+      window.location.href = '/main.html';
+    } catch (error) {
+      authError.textContent = 'Network error, please try again.';
+    } finally {
+      signupButton.disabled = false;
     }
-    window.location.href = '/main.html';
   });
 }
 
@@ -359,21 +403,29 @@ async function initMainPage() {
 }
 
 async function initAdminPage() {
-  document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
+  const adminError = document.getElementById('adminError');
+  adminLoginBtn.addEventListener('click', async () => {
     const username = document.getElementById('adminUsername').value.trim();
     const password = document.getElementById('adminPassword').value.trim();
-    const response = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const result = await response.json();
-    const error = document.getElementById('adminError');
-    if (!response.ok) {
-      error.textContent = result.error || 'Unable to log in as admin.';
-      return;
+    adminLoginBtn.disabled = true;
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const result = await safeFetchJson(response);
+      if (!response.ok) {
+        adminError.textContent = result.error || 'Unable to log in as admin.';
+        return;
+      }
+      window.location.href = '/admin-panel.html';
+    } catch (error) {
+      adminError.textContent = 'Network error, please try again.';
+    } finally {
+      adminLoginBtn.disabled = false;
     }
-    window.location.href = '/admin-panel.html';
   });
 }
 
