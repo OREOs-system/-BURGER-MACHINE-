@@ -255,7 +255,7 @@ async function loadProfile() {
   try {
     const response = await fetch('/api/user/profile');
     if (!response.ok) {
-      window.location.href = '/index.html';
+      window.location.href = '/';
       return;
     }
     const data = await safeFetchJson(response);
@@ -267,7 +267,7 @@ async function loadProfile() {
     document.getElementById('profileContact').value = profile.contact;
     document.getElementById('profileAddress').value = profile.address;
   } catch (error) {
-    window.location.href = '/index.html';
+    window.location.href = '/';
   }
 }
 
@@ -302,7 +302,7 @@ async function logout() {
     console.warn('Logout network error:', error);
   }
   localStorage.removeItem(cartKey);
-  window.location.href = '/index.html';
+  window.location.href = '/';
 }
 
 async function initAuthPage() {
