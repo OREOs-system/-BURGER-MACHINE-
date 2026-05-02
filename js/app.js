@@ -466,6 +466,38 @@ async function loadConfirmation() {
   if (orderMessage) {
     orderMessage.textContent = 'Thank you for your order! Your transaction is being processed.';
   }
+  // Fetch latest status
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      const data = await response.json();
+      const latestOrder = data.orders.find(o => o.id == order.id);
+      if (latestOrder && latestOrder.status !== order.status) {
+        order.status = latestOrder.status;
+        if (orderStatus) orderStatus.textContent = order.status;
+        localStorage.setItem('burger-machine-last-order', JSON.stringify(order));
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch order status:', e);
+  }
+  // Poll for status updates every 5 seconds
+  setInterval(async () => {
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const data = await response.json();
+        const latestOrder = data.orders.find(o => o.id == order.id);
+        if (latestOrder && latestOrder.status !== order.status) {
+          order.status = latestOrder.status;
+          if (orderStatus) orderStatus.textContent = order.status;
+          localStorage.setItem('burger-machine-last-order', JSON.stringify(order));
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, 5000);
   const backButton = document.getElementById('backToMenuBtn');
   if (backButton) {
     backButton.addEventListener('click', () => {
